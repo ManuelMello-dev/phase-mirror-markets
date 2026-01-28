@@ -163,7 +163,7 @@ class MarketCoherenceAnalyzer:
         
         # Calculate coherence
         nperseg = min(len(signal1) // 2, 256)
-        f, Cxy = signal.coherence(signal1, signal2, 
+        f, cxy = signal.coherence(signal1, signal2, 
                                   fs=self.sampling_rate,
                                   nperseg=nperseg)
         
@@ -172,7 +172,7 @@ class MarketCoherenceAnalyzer:
         for band_name, (f_low, f_high) in self.frequency_bands.items():
             mask = (f >= f_low) & (f <= f_high)
             if np.any(mask):
-                band_coherence[band_name] = float(np.mean(Cxy[mask]))
+                band_coherence[band_name] = float(np.mean(cxy[mask]))
             else:
                 band_coherence[band_name] = 0.0
         
@@ -264,14 +264,20 @@ class MarketCoherenceAnalyzer:
             reference_signal = primary_signal
         
         # Calculate returns for volatility analysis
+        # Use log returns to avoid division by zero and handle multiplicative returns
         if len(primary_signal) > 1:
-            returns = np.diff(primary_signal) / primary_signal[:-1]
+            # Add small epsilon to avoid log(0)
+            safe_signal = primary_signal + 1e-10
+            returns = np.diff(np.log(safe_signal))
         else:
             returns = np.array([0.0])
         
         # Calculate PLV using Hilbert transform for phase extraction
-        analytic1 = signal.hilbert(primary_signal)
-        analytic2 = signal.hilbert(reference_signal)
+        # Normalize signals to zero mean for consistent phase extraction
+        normalized_primary = primary_signal - np.mean(primary_signal)
+        normalized_reference = reference_signal - np.mean(reference_signal)
+        analytic1 = signal.hilbert(normalized_primary)
+        analytic2 = signal.hilbert(normalized_reference)
         phase1 = np.angle(analytic1)
         phase2 = np.angle(analytic2)
         plv = self.calculate_plv(phase1, phase2)

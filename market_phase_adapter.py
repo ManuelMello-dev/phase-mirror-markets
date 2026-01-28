@@ -182,6 +182,10 @@ class MarketPhaseAdapter:
         """
         Reconstruct market signal from phase-space representation.
         
+        Note: This uses an approximation (A*cos(φ)) rather than full Hilbert
+        transform inversion. The reconstruction is suitable for oscillatory
+        components but may not perfectly recover non-sinusoidal features.
+        
         Args:
             phase_repr: PhaseSpaceRepresentation object
             num_points: Optional number of points for reconstruction
@@ -240,13 +244,16 @@ class MarketPhaseAdapter:
     
     def calculate_phase_velocity(self, phases: np.ndarray) -> np.ndarray:
         """
-        Calculate the rate of change of phase (phase velocity).
+        Calculate the rate of change of phase (phase derivative).
+        
+        This is equivalent to instantaneous frequency calculation but operates
+        directly on phase values. Also known as angular frequency or phase velocity.
         
         Args:
             phases: Array of phase values
             
         Returns:
-            Array of phase velocity values
+            Array of phase velocity (derivative) values in rad/s
         """
         if len(phases) < 2:
             return np.array([0.0])
