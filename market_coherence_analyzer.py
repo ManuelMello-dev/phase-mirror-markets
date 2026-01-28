@@ -266,8 +266,14 @@ class MarketCoherenceAnalyzer:
         # Calculate returns for volatility analysis
         # Use log returns to avoid division by zero and handle multiplicative returns
         if len(primary_signal) > 1:
-            # Add small epsilon to avoid log(0)
-            safe_signal = primary_signal + 1e-10
+            # Ensure all values are positive for log returns
+            # Add offset if there are non-positive values
+            min_val = np.min(primary_signal)
+            if min_val <= 0:
+                offset = abs(min_val) + 1.0
+                safe_signal = primary_signal + offset
+            else:
+                safe_signal = primary_signal
             returns = np.diff(np.log(safe_signal))
         else:
             returns = np.array([0.0])
