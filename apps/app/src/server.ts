@@ -1,5 +1,7 @@
 import express, { Request, Response } from 'express';
 
+import { getOracleSignal } from './oracle';
+
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
@@ -18,20 +20,20 @@ app.get('/health', (_req: Request, res: Response) => {
   res.send('ok');
 });
 
-// GET /oracle/signal - returns placeholder signal data
-app.get('/oracle/signal', (req: Request, res: Response) => {
+// GET /oracle/signal - returns The Oracle's signal data
+app.get('/oracle/signal', async (req: Request, res: Response) => {
   const symbol = (req.query.symbol as string) || 'BTC-USD';
   
   // Basic input validation for symbol parameter
   const validSymbolPattern = /^[A-Z0-9]+-[A-Z0-9]+$/;
   const sanitizedSymbol = validSymbolPattern.test(symbol) ? symbol : 'BTC-USD';
   
-  res.json({
-    symbol: sanitizedSymbol,
-    signal: 'HOLD',
-    confidence: 0.5,
-    timestamp: new Date().toISOString()
-  });
+  // Use the new Oracle logic
+  const signalData = await getOracleSignal(sanitizedSymbol);
+
+  res.json(signalData);
+  
+  // The actual response is now handled by the new logic above
 });
 
 app.listen(PORT, '0.0.0.0', () => {
