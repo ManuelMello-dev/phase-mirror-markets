@@ -1,0 +1,21 @@
+{
+  "name": "phase-mirror-markets",
+  "version": "1.0.0",
+  "description": "Railway-deployable monorepo with Vite React frontend and Express TypeScript backend",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/app"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:app": "npm run dev --workspace=apps/app",
+    "build:web": "npm run build --workspace=apps/web",
+    "build:app": "npm run build --workspace=apps/app",
+    "start:web": "npm run start --workspace=apps/web",
+    "start:app": "npm run start --workspace=apps/app"
+  },
+  "keywords": ["monorepo", "railway", "vite", "react", "express", "typescript"],
+  "author": "",
+  "license": "ISC"
+}
