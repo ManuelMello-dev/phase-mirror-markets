@@ -1,10 +1,10 @@
 import React from 'react';
-import OracleDisplay from './OracleDisplay';
+import NeuralDashboard from './NeuralDashboard';
 
 function App() {
   return (
     <div>
-      <OracleDisplay />
+      <NeuralDashboard />
     </div>
   );
 }

@@ -20,6 +20,8 @@ export interface OracleSignal {
     phase: number; 
     T_reversal: number; 
     confidence: number; 
+    psd: number[];
+    attention_coherence: number;
     timestamp: string;
     is_live_data: boolean;
 }
@@ -52,6 +54,8 @@ export function calculateOracleSignal(symbol: string, data: MarketDataPoint[], i
             phase: 0,
             T_reversal: 0,
             confidence: 0,
+            psd: [],
+            attention_coherence: 0,
             timestamp: new Date().toISOString(),
             is_live_data: isLive,
         };
@@ -68,7 +72,7 @@ export function calculateOracleSignal(symbol: string, data: MarketDataPoint[], i
         low: lows,
         close: closes,
         volume: volumes,
-        period: data.length, 
+        period: Math.min(data.length, 20), // Use a windowed period
     });
     const Z_prime = vwapResult[vwapResult.length - 1] || data[data.length - 1].close;
     const Z_current = data[data.length - 1].close;
@@ -76,7 +80,7 @@ export function calculateOracleSignal(symbol: string, data: MarketDataPoint[], i
     // 2. Deviation Measurement (E)
     const sdResult = SD.calculate({
         values: closes,
-        period: data.length,
+        period: Math.min(data.length, 20),
     });
     const sigma = sdResult[sdResult.length - 1] || 1; 
     const E = (Z_current - Z_prime) / sigma;
@@ -96,7 +100,7 @@ export function calculateOracleSignal(symbol: string, data: MarketDataPoint[], i
         }
     }
 
-    const phasor = phasors[dominantIndex];
+    const phasor = phasors[dominantIndex] || [0, 0];
     const real = phasor[0];
     const imag = phasor[1];
     const phase = Math.atan2(imag, real); 
@@ -115,6 +119,28 @@ export function calculateOracleSignal(symbol: string, data: MarketDataPoint[], i
         signal = E < 0 ? 'BUY' : 'SELL';
     }
 
+    // --- Advanced Signal Analysis ---
+    
+    // 4. Power Spectral Density (PSD)
+    const psd = magnitudes.map(m => m * m);
+
+    // 5. Attention Coherence
+    const meanClose = closes.reduce((a, b) => a + b, 0) / closes.length;
+    const meanVolume = volumes.reduce((a, b) => a + b, 0) / volumes.length;
+    
+    let num = 0;
+    let denClose = 0;
+    let denVolume = 0;
+    
+    for (let i = 0; i < closes.length; i++) {
+        const dClose = closes[i] - meanClose;
+        const dVolume = volumes[i] - meanVolume;
+        num += dClose * dVolume;
+        denClose += dClose * dClose;
+        denVolume += dVolume * dVolume;
+    }
+    
+    const attention_coherence = num / (Math.sqrt(denClose * denVolume) || 1);
     const confidence = Math.min(1, Math.abs(E) / 3);
 
     return {
@@ -125,14 +151,27 @@ export function calculateOracleSignal(symbol: string, data: MarketDataPoint[], i
         phase: normalizedPhase,
         T_reversal,
         confidence,
+        psd,
+        attention_coherence,
         timestamp: new Date().toISOString(),
         is_live_data: isLive,
     };
 }
 
 export async function getOracleSignal(symbol: string): Promise<OracleSignal> {
-    let historicalData = await fetchHistoricalData(symbol, 3600, 128); 
+    // Add a timeout to the data fetching
+    let historicalData: MarketDataPoint[] = [];
     let isLive = true;
+
+    try {
+        historicalData = await Promise.race([
+            fetchHistoricalData(symbol, 3600, 128),
+            new Promise<MarketDataPoint[]>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+        ]);
+    } catch (e) {
+        console.log('Data fetch failed or timed out for ' + symbol);
+        historicalData = [];
+    }
 
     if (historicalData.length === 0) {
         console.log('Using synthetic data as fallback for ' + symbol);
