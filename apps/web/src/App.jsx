@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import NeuralDashboard from './NeuralDashboard';
 import FractalCoherenceDashboard from './FractalCoherenceDashboard';
+import ResonanceDashboard from './ResonanceDashboard';
 
 function App() {
   const [view, setView] = useState('oracle');
@@ -46,11 +47,26 @@ function App() {
           >
             Fractal Coherence
           </button>
+          <button
+            onClick={() => setView('resonance')}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: view === 'resonance' ? '#3b82f6' : '#4b5563',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: view === 'resonance' ? 'bold' : 'normal'
+            }}
+          >
+            Faraday Resonance
+          </button>
         </div>
       </div>
       <div>
         {view === 'oracle' && <NeuralDashboard />}
         {view === 'coherence' && <FractalCoherenceDashboard />}
+        {view === 'resonance' && <ResonanceDashboard />}
       </div>
     </div>
   );
