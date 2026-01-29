@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
-
-import { getOracleSignal } from './oracle';
+import axios from 'axios';
+import { getOracleSignal } from './oracle';;
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -32,8 +32,18 @@ app.get('/oracle/signal', async (req: Request, res: Response) => {
   const signalData = await getOracleSignal(sanitizedSymbol);
 
   res.json(signalData);
-  
-  // The actual response is now handled by the new logic above
+});
+
+// GET /coherence/report - returns the fractal coherence analysis
+app.get('/coherence/report', async (req: Request, res: Response) => {
+  try {
+    const coherenceEngineUrl = process.env.COHERENCE_ENGINE_URL || 'http://localhost:8000';
+    const response = await axios.get(`${coherenceEngineUrl}/coherence/report`);
+    res.json(response.data);
+  } catch (error: any) {
+    console.error('Error fetching coherence report:', error.message);
+    res.status(500).json({ error: 'Failed to fetch coherence report' });
+  }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
