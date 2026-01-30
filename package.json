@@ -8,12 +8,16 @@
     "apps/app"
   ],
   "scripts": {
+    "install:coherence": "cd apps/coherence-engine && pip install -r requirements.txt",
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:app": "npm run dev --workspace=apps/app",
+    "dev:coherence": "cd apps/coherence-engine && uvicorn main:app --host 0.0.0.0 --port 8000 --reload",
     "build:web": "npm run build --workspace=apps/web",
     "build:app": "npm run build --workspace=apps/app",
     "start:web": "npm run start --workspace=apps/web",
-    "start:app": "npm run start --workspace=apps/app"
+    "start:app": "npm run start --workspace=apps/app",
+    "start:coherence": "cd apps/coherence-engine && uvicorn main:app --host 0.0.0.0 --port 8000",
+    "build": "npm run build:web && npm run build:app"
   },
   "keywords": ["monorepo", "railway", "vite", "react", "express", "typescript"],
   "author": "",

@@ -17,7 +17,7 @@ app.get('/', (_req: Request, res: Response) => {
 
 // GET /health - returns 'ok'
 app.get('/health', (_req: Request, res: Response) => {
-  res.send('ok');
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // GET /oracle/signal - returns The Oracle's signal data
